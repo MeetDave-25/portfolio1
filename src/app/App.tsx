@@ -1418,7 +1418,14 @@ function AdminPersonal() {
           <AdminField label="Email" value={local.email} onChange={(v) => update("email", v)} type="email" />
           <AdminField label="Phone" value={local.phone} onChange={(v) => update("phone", v)} />
           <AdminField label="Address" value={local.address} onChange={(v) => update("address", v)} />
-          <AdminField label="Photo URL" value={local.photo} onChange={(v) => update("photo", v)} />
+          <div className="space-y-3">
+            <AdminField label="Photo URL" value={local.photo} onChange={(v) => update("photo", v)} />
+            {local.photo && (
+              <div className="h-24 w-24 rounded-2xl overflow-hidden border border-[rgba(124,92,240,0.15)] flex items-center justify-center bg-[rgba(0,0,0,0.3)] shadow-lg">
+                <img src={local.photo} alt="Profile preview" className="w-full h-full object-cover" />
+              </div>
+            )}
+          </div>
         </div>
       </AdminSection>
       <AdminSection title="Social & Resume Links">
@@ -1564,7 +1571,16 @@ function AdminProjects() {
                   <AdminField label="GitHub URL" value={project.github} onChange={(v) => update(project.id, "github", v)} />
                   <AdminField label="Demo URL" value={project.demo} onChange={(v) => update(project.id, "demo", v)} />
                 </div>
-                <AdminField label="Cover Image URL" value={project.image} onChange={(v) => update(project.id, "image", v)} />
+                <div className="grid sm:grid-cols-4 gap-4 items-end">
+                  <div className="sm:col-span-3">
+                    <AdminField label="Cover Image URL" value={project.image} onChange={(v) => update(project.id, "image", v)} />
+                  </div>
+                  {project.image && (
+                     <div className="h-16 rounded-xl overflow-hidden border border-[rgba(124,92,240,0.15)] bg-[rgba(0,0,0,0.4)] flex items-center justify-center shadow-lg">
+                        <img src={project.image} alt="Project cover preview" className="max-h-full min-w-full object-cover" />
+                     </div>
+                  )}
+                </div>
                 <div>
                   <label className="block text-[#6060a0] text-xs mb-1.5" style={{ fontFamily: "'JetBrains Mono', monospace" }}>Tags (comma separated)</label>
                   <input value={project.tags.join(", ")} onChange={(e) => update(project.id, "tags", e.target.value.split(",").map((t) => t.trim()).filter(Boolean))} className="premium-input" />
@@ -1675,15 +1691,13 @@ function AdminCertificates() {
               <button onClick={() => remove(cert.id)} className="flex items-center gap-2 px-3 py-2.5 text-red-400/70 hover:text-red-400 text-sm rounded-xl hover:bg-[rgba(255,0,0,0.05)] transition-all border border-transparent hover:border-[rgba(255,0,0,0.1)]"><Trash2 size={14} /> Remove</button>
             </div>
             {/* Image URL row */}
-            <div className="mt-3 grid sm:grid-cols-5 gap-3 items-start">
+            <div className="mt-3 grid sm:grid-cols-5 gap-3 items-end">
               <div className="sm:col-span-4">
                 <AdminField label="Certificate Image URL (paste direct image link to show it in lightbox)" value={(cert as any).image || ""} onChange={(v) => update(cert.id, "image", v)} />
               </div>
               {(cert as any).image && (
-                <div className="flex items-end pb-0.5">
-                  <a href={(cert as any).image} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-xs border border-[rgba(124,92,240,0.3)] text-[#a78bfa] hover:bg-[rgba(124,92,240,0.1)] transition-all whitespace-nowrap">
-                    <Eye size={12} /> Preview
-                  </a>
+                <div className="h-14 rounded-lg overflow-hidden border border-[rgba(124,92,240,0.15)] bg-[rgba(0,0,0,0.4)] flex items-center justify-center shadow-lg">
+                  <img src={(cert as any).image} alt="Certificate preview" className="max-h-full min-w-full object-cover" />
                 </div>
               )}
             </div>
