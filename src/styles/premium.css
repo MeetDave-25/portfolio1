@@ -6,9 +6,17 @@
 
 /* ─── 1. Google Fonts ──────────────────────────────────────── */
 
-/* ─── 2. Custom Cursor ─────────────────────────────────────── */
-* {
-  cursor: none !important;
+@media (hover: hover) and (pointer: fine) {
+  * {
+    cursor: none !important;
+  }
+}
+
+@media (max-width: 1024px) {
+  #cursor-dot,
+  #cursor-ring {
+    display: none !important;
+  }
 }
 
 #cursor-dot {

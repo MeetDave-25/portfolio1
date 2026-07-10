@@ -229,6 +229,22 @@ function GlobalEffects() {
   useEffect(() => {
     let running = true;
 
+    const onScroll = () => {
+      const scrolled = window.scrollY;
+      const total = document.body.scrollHeight - window.innerHeight;
+      const pct = total > 0 ? (scrolled / total) * 100 : 0;
+      if (progressRef.current) progressRef.current.style.width = `${pct}%`;
+    };
+
+    const isTouch = window.matchMedia("(pointer: coarse)").matches;
+    if (isTouch) {
+      window.addEventListener("scroll", onScroll, { passive: true });
+      onScroll();
+      return () => {
+        window.removeEventListener("scroll", onScroll);
+      };
+    }
+
     const moveDot = (x: number, y: number) => {
       if (dotRef.current) {
         dotRef.current.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
@@ -250,13 +266,6 @@ function GlobalEffects() {
     const onMove = (e: MouseEvent) => {
       mouse.current = { x: e.clientX, y: e.clientY };
       moveDot(e.clientX, e.clientY);
-    };
-
-    const onScroll = () => {
-      const scrolled = window.scrollY;
-      const total = document.body.scrollHeight - window.innerHeight;
-      const pct = total > 0 ? (scrolled / total) * 100 : 0;
-      if (progressRef.current) progressRef.current.style.width = `${pct}%`;
     };
 
     const onHoverIn = () => document.body.classList.add("cursor-hover");
@@ -538,7 +547,7 @@ function Hero() {
   return (
     <section id="hero" className="relative min-h-screen flex items-center justify-center px-6 pt-20">
       {/* Orbital Decoration */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
+      <div className="absolute inset-0 hidden md:flex items-center justify-center pointer-events-none select-none">
         <div style={{ position: "relative", width: 520, height: 520 }}>
           {/* Ring 1 */}
           <div className="orbit-ring" style={{ width: 480, height: 480, borderColor: "rgba(124,92,240,0.12)", borderWidth: 1, animation: "orbit 40s linear infinite" }}>
@@ -971,17 +980,23 @@ function Certificates() {
   const { data } = useData();
   const { ref, visible } = useReveal();
   const [lightbox, setLightbox] = useState<any>(null);
+  const [flippedCards, setFlippedCards] = useState<Record<number, boolean>>({});
+
+  const toggleFlip = (id: number) => {
+    setFlippedCards((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
 
   return (
     <section id="certificates" className="relative py-32 px-6">
       <div className="max-w-6xl mx-auto">
-        <SectionHeader label="Certificates" title={<><GradientText>Credentials</GradientText> & Learning</>} subtitle="Hover a card to see details. Click to view the certificate image." />
+        <SectionHeader label="Certificates" title={<><GradientText>Credentials</GradientText> & Learning</>} subtitle="Click or tap any card to view details, then select 'View Image'." />
         <div ref={ref} className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {data.certificates.map((cert, i) => (
             <div
               key={cert.id}
-              className={`flip-card-wrap transition-all duration-500 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
+              className={`flip-card-wrap transition-all duration-500 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"} ${flippedCards[cert.id] ? "flipped" : ""}`}
               style={{ transitionDelay: `${Math.min(i * 80, 350)}ms` }}
+              onClick={() => toggleFlip(cert.id)}
             >
               <div className="flip-card">
                 {/* Front */}
@@ -992,7 +1007,7 @@ function Certificates() {
                   <h3 className="text-[#e8e8f0] font-bold text-sm mb-1 leading-snug" style={{ fontFamily: "Oxanium, sans-serif" }}>{cert.title}</h3>
                   <div className="text-[#6060a0] text-xs">{cert.org}</div>
                   <div className="text-[#3a3a60] text-xs mt-1" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{cert.date}</div>
-                  <div className="mt-3 text-xs text-[#4a4a80]">Hover to flip →</div>
+                  <div className="mt-3 text-xs text-[#525299]" style={{ fontFamily: "'JetBrains Mono', monospace" }}>Click / Tap to flip →</div>
                 </div>
                 {/* Back */}
                 <div className="flip-back items-start">
@@ -1008,17 +1023,17 @@ function Certificates() {
                   <div className="text-[#e8e8f0] text-xs font-medium mb-2">{cert.org}</div>
                   <div className="text-[#6060a0] text-xs mb-0.5">ID</div>
                   <div className="text-[#e8e8f0] text-xs font-mono mb-3" style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "0.65rem" }}>{cert.credId}</div>
-                  <div className="flex gap-2 flex-wrap">
+                  <div className="flex gap-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
                     {cert.image && (
                       <button
-                        onClick={() => setLightbox(cert)}
+                        onClick={(e) => { e.stopPropagation(); setLightbox(cert); }}
                         className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg text-white transition-all btn-shimmer"
                         style={{ background: "linear-gradient(135deg, #7c5cf0, #06b6d4)", fontSize: "0.7rem" }}
                       >
                         <Eye size={10} /> View Image
                       </button>
                     )}
-                    <a href={cert.link} className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg border border-[rgba(124,92,240,0.3)] text-[#a78bfa] hover:bg-[rgba(124,92,240,0.1)] transition-all" style={{ fontSize: "0.7rem" }}>
+                    <a href={cert.link} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg border border-[rgba(124,92,240,0.3)] text-[#a78bfa] hover:bg-[rgba(124,92,240,0.1)] transition-all" style={{ fontSize: "0.7rem" }}>
                       <ExternalLink size={10} /> Verify
                     </a>
                   </div>
@@ -1289,11 +1304,10 @@ function Footer({ onAdmin }: { onAdmin: () => void }) {
 
 // ─── Admin Panel ─────────────────────────────────────────────────────────────
 
-const ADMIN_PASSWORD = "admin123";
+const ADMIN_PASSWORD = "meetgdave@25";
 
 function AdminLogin({ onLogin }: { onLogin: () => void }) {
   const [pw, setPw] = useState("");
-  const [show, setShow] = useState(false);
   const [error, setError] = useState(false);
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1301,25 +1315,21 @@ function AdminLogin({ onLogin }: { onLogin: () => void }) {
     else { setError(true); setPw(""); }
   };
   return (
-    <div className="flex items-center justify-center min-h-full p-6">
+    <div className="flex items-center justify-center min-h-[60vh] p-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: "linear-gradient(135deg, #7c5cf0, #06b6d4)" }}><Lock size={28} className="text-white" /></div>
           <h2 className="text-2xl font-bold text-[#e8e8f0] mb-1" style={{ fontFamily: "Oxanium, sans-serif" }}>Admin Access</h2>
-          <p className="text-[#6060a0] text-sm">Enter your password to continue</p>
-          <p className="text-[#3a3a60] text-xs mt-1 font-mono">Default: admin123</p>
+          <p className="text-[#6060a0] text-sm">Enter password to continue</p>
         </div>
         <form onSubmit={submit} className="space-y-4">
           <div className="relative">
             <input
-              type={show ? "text" : "password"} value={pw}
+              type="password" value={pw}
               onChange={(e) => { setPw(e.target.value); setError(false); }}
               placeholder="Password"
-              className={`premium-input pr-12 ${error ? "border-red-500/50 focus:border-red-500/80" : ""}`}
+              className={`premium-input ${error ? "border-red-500/50 focus:border-red-500/80" : ""}`}
             />
-            <button type="button" onClick={() => setShow(!show)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6060a0] hover:text-[#a0a0c0]">
-              {show ? <EyeOff size={16} /> : <Eye size={16} />}
-            </button>
           </div>
           {error && <div className="flex items-center gap-2 text-red-400 text-xs"><AlertCircle size={12} /> Incorrect password. Try again.</div>}
           <button type="submit" className="btn-shimmer w-full py-3.5 rounded-xl font-semibold text-white hover:opacity-90 transition-all" style={{ background: "linear-gradient(135deg, #7c5cf0, #06b6d4)" }}>Sign In</button>
@@ -1816,21 +1826,21 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex" style={{ background: "rgba(0,0,0,0.88)", backdropFilter: "blur(10px)" }}>
-      <div className="w-64 shrink-0 flex flex-col border-r border-[rgba(124,92,240,0.15)]" style={{ background: "#08081a" }}>
-        <div className="p-5 border-b border-[rgba(124,92,240,0.1)]">
-          <div className="flex items-center justify-between mb-1">
+    <div className="fixed inset-0 z-[100] flex flex-col md:flex-row" style={{ background: "rgba(0,0,0,0.92)", backdropFilter: "blur(12px)" }}>
+      <div className="w-full md:w-64 shrink-0 flex flex-col border-b md:border-b-0 md:border-r border-[rgba(124,92,240,0.15)] bg-[#08081a]">
+        <div className="p-4 md:p-5 border-b border-[rgba(124,92,240,0.1)] flex items-center justify-between md:block">
+          <div>
             <div className="text-sm font-bold" style={{ fontFamily: "Oxanium, sans-serif" }}><GradientText>Admin Panel</GradientText></div>
-            <button onClick={onClose} className="p-1.5 text-[#3a3a60] hover:text-[#a0a0c0] rounded-lg transition-all"><X size={16} /></button>
+            <div className="text-[#3a3a60] text-[10px] md:text-xs" style={{ fontFamily: "'JetBrains Mono', monospace" }}>Portfolio CMS</div>
           </div>
-          <div className="text-[#3a3a60] text-xs" style={{ fontFamily: "'JetBrains Mono', monospace" }}>Portfolio CMS</div>
+          <button onClick={onClose} className="md:hidden p-2 text-[#6060a0] hover:text-white rounded-lg transition-all"><X size={18} /></button>
         </div>
 
         {loggedIn && (
-          <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+          <nav className="p-2 md:p-3 flex md:flex-col gap-1 overflow-x-auto md:overflow-x-visible md:overflow-y-auto scrollbar-none whitespace-nowrap min-h-[48px] md:min-h-0">
             {ADMIN_TABS.map(({ id, label, icon: Icon }) => (
-              <button key={id} onClick={() => setTab(id)} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200 text-left ${tab === id ? "text-white bg-[rgba(124,92,240,0.2)] border border-[rgba(124,92,240,0.3)]" : "text-[#6060a0] hover:text-[#a0a0c0] hover:bg-[rgba(255,255,255,0.03)]"}`}>
-                <Icon size={15} className={tab === id ? "text-[#7c5cf0]" : ""} />
+              <button key={id} onClick={() => setTab(id)} className={`flex items-center gap-2 md:gap-3 px-3 py-2 rounded-lg text-xs md:text-sm transition-all duration-200 shrink-0 ${tab === id ? "text-white bg-[rgba(124,92,240,0.2)] border border-[rgba(124,92,240,0.3)] font-medium" : "text-[#6060a0] hover:text-[#a0a0c0] hover:bg-[rgba(255,255,255,0.03)]"}`}>
+                <Icon size={14} className={tab === id ? "text-[#7c5cf0]" : ""} />
                 {label}
               </button>
             ))}
@@ -1838,26 +1848,25 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
         )}
 
         {loggedIn && (
-          <div className="p-3 border-t border-[rgba(124,92,240,0.1)] space-y-2">
-            <button onClick={handleReset} className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-[#6060a0] hover:text-[#f59e0b] hover:bg-[rgba(245,158,11,0.05)] transition-all"><RefreshCw size={12} /> Reset to Defaults</button>
-            <button onClick={handleLogout} className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-[#6060a0] hover:text-red-400 hover:bg-[rgba(255,0,0,0.05)] transition-all"><LogOut size={12} /> Sign Out</button>
+          <div className="p-2 md:p-3 border-t border-[rgba(124,92,240,0.1)] flex md:flex-col gap-2 shrink-0 justify-between items-center md:items-stretch">
+            <button onClick={handleReset} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] md:text-xs text-[#6060a0] hover:text-[#f59e0b] hover:bg-[rgba(245,158,11,0.05)] transition-all shrink-0"><RefreshCw size={11} /> Reset</button>
+            <button onClick={handleLogout} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] md:text-xs text-[#6060a0] hover:text-red-400 hover:bg-[rgba(255,0,0,0.05)] transition-all shrink-0"><LogOut size={11} /> Sign Out</button>
           </div>
         )}
       </div>
 
-      <div className="flex-1 flex flex-col min-w-0" style={{ background: "#05050f" }}>
+      <div className="flex-1 flex flex-col min-w-0 bg-[#05050f]">
         {loggedIn && (
-          <div className="px-8 py-5 border-b border-[rgba(124,92,240,0.1)] flex items-center justify-between shrink-0">
+          <div className="px-5 md:px-8 py-4 border-b border-[rgba(124,92,240,0.1)] flex items-center justify-between shrink-0">
             <div>
-              <h2 className="text-[#e8e8f0] font-bold text-lg" style={{ fontFamily: "Oxanium, sans-serif" }}>{ADMIN_TABS.find((t) => t.id === tab)?.label}</h2>
-              <p className="text-[#6060a0] text-xs mt-0.5" style={{ fontFamily: "'JetBrains Mono', monospace" }}>Changes auto-reflect on the portfolio</p>
+              <h2 className="text-[#e8e8f0] font-bold text-sm md:text-lg" style={{ fontFamily: "Oxanium, sans-serif" }}>{ADMIN_TABS.find((t) => t.id === tab)?.label}</h2>
             </div>
-            <button onClick={onClose} className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm border border-[rgba(124,92,240,0.2)] text-[#6060a0] hover:text-white hover:border-[rgba(124,92,240,0.4)] transition-all">
-              <Eye size={14} /> View Portfolio
+            <button onClick={onClose} className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs border border-[rgba(124,92,240,0.2)] text-[#6060a0] hover:text-white hover:border-[rgba(124,92,240,0.4)] transition-all">
+              <Eye size={12} /> Exit CMS
             </button>
           </div>
         )}
-        <div className="flex-1 overflow-y-auto p-8">
+        <div className="flex-1 overflow-y-auto p-4 md:p-8">
           {!loggedIn ? <AdminLogin onLogin={handleLogin} /> : (tabContent[tab] ?? null)}
         </div>
       </div>
