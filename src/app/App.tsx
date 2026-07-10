@@ -26,6 +26,7 @@ const DEFAULT_DATA = {
     github: "#",
     linkedin: "#",
     instagram: "#",
+    resume: "#",
     photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&h=625&fit=crop&auto=format",
     available: true,
     roles: ["AI Engineer", "Software Developer", "Full Stack Developer", "ML Enthusiast", "Problem Solver"],
@@ -584,7 +585,7 @@ function Hero() {
           >
             View Projects <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
           </button>
-          <a href="#" className="flex items-center gap-2 px-8 py-3.5 rounded-xl font-semibold border border-[rgba(124,92,240,0.3)] text-[#a0a0c0] hover:text-white hover:border-[rgba(124,92,240,0.6)] transition-all">
+          <a href={data.personal.resume} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-8 py-3.5 rounded-xl font-semibold border border-[rgba(124,92,240,0.3)] text-[#a0a0c0] hover:text-white hover:border-[rgba(124,92,240,0.6)] transition-all">
             <Download size={16} /> Resume
           </a>
           <button onClick={() => scrollTo("contact")} className="flex items-center gap-2 px-8 py-3.5 rounded-xl font-semibold border border-[rgba(255,255,255,0.08)] text-[#6060a0] hover:text-white hover:border-[rgba(255,255,255,0.2)] transition-all">
@@ -1410,11 +1411,12 @@ function AdminPersonal() {
           <AdminField label="Photo URL" value={local.photo} onChange={(v) => update("photo", v)} />
         </div>
       </AdminSection>
-      <AdminSection title="Social Links">
+      <AdminSection title="Social & Resume Links">
         <div className="grid sm:grid-cols-2 gap-4">
           <AdminField label="GitHub URL" value={local.github} onChange={(v) => update("github", v)} />
           <AdminField label="LinkedIn URL" value={local.linkedin} onChange={(v) => update("linkedin", v)} />
           <AdminField label="Instagram URL" value={local.instagram} onChange={(v) => update("instagram", v)} />
+          <AdminField label="Resume Link (Google Drive, Dropbox, etc.)" value={(local as any).resume || ""} onChange={(v) => update("resume", v)} />
         </div>
       </AdminSection>
       <AdminSection title="Hero Typing Roles">
