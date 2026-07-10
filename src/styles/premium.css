@@ -734,3 +734,38 @@ textarea.premium-input { resize: none; }
   vertical-align: middle;
   animation: blink 1s step-end infinite;
 }
+
+/* ─── 37. Mobile Performance ────────────────────────────────── */
+@media (max-width: 768px) {
+  /* Freeze expensive full-screen noise repaint */
+  body::before {
+    animation: none !important;
+    opacity: 0.1 !important;
+  }
+  
+  /* Reduce SVG/CSS blur rendering footprint on mobile GPUs */
+  .aurora-blob {
+    animation: none !important;
+    filter: blur(40px) !important;
+    opacity: 0.7 !important;
+  }
+  
+  /* Free up compositing queue by hiding duplicate heavy nodes */
+  .aurora-blob-3,
+  .aurora-blob-4 {
+    display: none !important;
+  }
+  
+  /* Turn off expensive individual 3D moving particle layers */
+  .particle {
+    display: none !important;
+  }
+  
+  /* Downgrade heavy blur backdrop filters for smoother scrolls */
+  .glass-card,
+  .flip-front,
+  .flip-back {
+    backdrop-filter: blur(10px) saturate(140%) !important;
+    -webkit-backdrop-filter: blur(10px) saturate(140%) !important;
+  }
+}
