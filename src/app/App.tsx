@@ -8,6 +8,23 @@ import {
   CheckCircle, AlertCircle, ChevronUp, RefreshCw, Sparkles
 } from "lucide-react";
 
+// ─── Google Drive URL Converter ───────────────────────────────────────────────
+// Converts any Google Drive share link into a direct embeddable image URL.
+// Supports all three common Drive link formats. Passes non-Drive URLs through.
+function driveUrl(url: string): string {
+  if (!url) return url;
+  // Format 1: https://drive.google.com/file/d/FILE_ID/view?...
+  const fileMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (fileMatch) return `https://lh3.googleusercontent.com/d/${fileMatch[1]}`;
+  // Format 2: https://drive.google.com/open?id=FILE_ID
+  const openMatch = url.match(/drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)/);
+  if (openMatch) return `https://lh3.googleusercontent.com/d/${openMatch[1]}`;
+  // Format 3: https://drive.google.com/uc?id=FILE_ID or uc?export=view&id=FILE_ID
+  const ucMatch = url.match(/drive\.google\.com\/uc\?.*id=([a-zA-Z0-9_-]+)/);
+  if (ucMatch) return `https://lh3.googleusercontent.com/d/${ucMatch[1]}`;
+  return url; // Not a Drive link, return as-is
+}
+
 // ─── Default Data ─────────────────────────────────────────────────────────────
 
 const DEFAULT_DATA = {
@@ -594,7 +611,7 @@ function Hero() {
           >
             View Projects <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
           </button>
-          <a href={data.personal.resume} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-8 py-3.5 rounded-xl font-semibold border border-[rgba(124,92,240,0.3)] text-[#a0a0c0] hover:text-white hover:border-[rgba(124,92,240,0.6)] transition-all">
+          <a href={data.personal.resume} target={data.personal.resume && data.personal.resume !== "#" ? "_blank" : undefined} rel="noopener noreferrer" className="flex items-center gap-2 px-6 py-3 md:px-8 md:py-3.5 rounded-xl text-sm md:text-base font-semibold border border-[rgba(124,92,240,0.3)] text-[#a0a0c0] hover:text-white hover:border-[rgba(124,92,240,0.6)] transition-all">
             <Download size={16} /> Resume
           </a>
           <button onClick={() => scrollTo("contact")} className="flex items-center gap-2 px-8 py-3.5 rounded-xl font-semibold border border-[rgba(255,255,255,0.08)] text-[#6060a0] hover:text-white hover:border-[rgba(255,255,255,0.2)] transition-all">
@@ -636,7 +653,7 @@ function About() {
           <div className={`reveal-left ${visible ? "visible" : ""}`}>
             <div className="relative">
               <div className="photo-wrap w-full aspect-[4/5] rounded-3xl overflow-hidden" style={{ background: "linear-gradient(135deg, rgba(124,92,240,0.2), rgba(6,182,212,0.1))" }}>
-                <img src={data.personal.photo} alt={data.personal.name} className="w-full h-full object-cover mix-blend-luminosity opacity-80" />
+                <img src={driveUrl(data.personal.photo)} alt={data.personal.name} className="w-full h-full object-cover mix-blend-luminosity opacity-80" />
                 <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(5,5,15,0.6) 0%, transparent 60%)" }} />
               </div>
               <div className="absolute -bottom-4 -right-4 w-24 h-24 rounded-2xl flex items-center justify-center shadow-lg" style={{ background: "linear-gradient(135deg, #7c5cf0, #06b6d4)" }}>
@@ -793,23 +810,34 @@ function Projects() {
             >
               {/* Image area */}
               <div className="relative h-52 overflow-hidden bg-[rgba(124,92,240,0.05)]">
-                <img src={project.image} alt={project.title} className="project-img w-full h-full object-cover opacity-70" />
+                <img src={driveUrl(project.image) || "https://placehold.co/600x400/08081a/7c5cf0?text=No+Image"} onError={(e) => { e.currentTarget.src = "https://placehold.co/600x400/08081a/7c5cf0?text=No+Image"; }} alt={project.title} className="project-img w-full h-full object-cover opacity-70" />
                 <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(13,13,26,0.95) 0%, transparent 55%)" }} />
                 {project.featured && (
                   <div className="absolute top-3 left-3">
                     <Tag color="amber">⭐ Featured</Tag>
                   </div>
                 )}
-                <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <a href={project.github} className="p-1.5 rounded-lg bg-[rgba(5,5,15,0.85)] text-[#a0a0c0] hover:text-white border border-[rgba(255,255,255,0.1)] transition-colors"><Github size={14} /></a>
-                  <a href={project.demo} className="p-1.5 rounded-lg bg-[rgba(5,5,15,0.85)] text-[#a0a0c0] hover:text-white border border-[rgba(255,255,255,0.1)] transition-colors"><ExternalLink size={14} /></a>
+                {/* Action Links & Drawer */}
+                <div className="absolute top-3 right-3 flex gap-2 md:opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  {project.github && project.github !== "#" && <a href={project.github} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-lg bg-[rgba(5,5,15,0.85)] text-[#a0a0c0] hover:text-white border border-[rgba(255,255,255,0.1)] transition-colors"><Github size={14} /></a>}
+                  {project.demo && project.demo !== "#" && <a href={project.demo} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-lg bg-[rgba(5,5,15,0.85)] text-[#06b6d4] hover:text-[#22d3ee] border border-[rgba(255,255,255,0.1)] transition-colors"><ExternalLink size={14} /></a>}
                 </div>
 
                 {/* HOVER DRAWER */}
-                <div className="project-drawer rounded-b-none">
-                  <h3 className="text-[#e8e8f0] font-bold text-sm mb-1 leading-snug" style={{ fontFamily: "Oxanium, sans-serif" }}>{project.title}</h3>
-                  <p className="text-[#8080b0] text-xs leading-relaxed mb-2">{project.description}</p>
-                  <div className="flex flex-wrap gap-1">{project.tags.slice(0, 4).map((tag) => <Tag key={tag} color="purple">{tag}</Tag>)}</div>
+                <div className="project-drawer rounded-b-none flex flex-col justify-between">
+                  <div>
+                    <h3 className="text-[#e8e8f0] font-bold text-sm mb-1 leading-snug" style={{ fontFamily: "Oxanium, sans-serif" }}>{project.title}</h3>
+                    <p className="text-[#8080b0] text-xs leading-relaxed mb-2">{project.description}</p>
+                    <div className="flex flex-wrap gap-1">{project.tags.slice(0, 4).map((tag) => <Tag key={tag} color="purple">{tag}</Tag>)}</div>
+                  </div>
+                  <div className="flex sm:hidden items-center gap-3 mt-3 pt-3 border-t border-[rgba(124,92,240,0.1)]">
+                    {project.github && project.github !== "#" && (
+                      <a href={project.github} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-[#a0a0c0] hover:text-white transition-colors text-xs font-medium"><Github size={14} /> Code</a>
+                    )}
+                    {project.demo && project.demo !== "#" && (
+                      <a href={project.demo} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-[#06b6d4] hover:text-[#22d3ee] transition-colors text-xs font-medium"><ExternalLink size={14} /> Demo</a>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -928,7 +956,8 @@ function CertLightbox({ cert, onClose }: { cert: any; onClose: () => void }) {
         {cert.image ? (
           <div className="relative bg-[rgba(0,0,0,0.4)]" style={{ maxHeight: "55vh", overflow: "hidden" }}>
             <img
-              src={cert.image}
+              src={driveUrl(cert.image)}
+              onError={(e) => { e.currentTarget.src = "https://placehold.co/600x400/08081a/7c5cf0?text=Invalid+Image"; }}
               alt={cert.title}
               className="w-full object-contain"
               style={{ maxHeight: "55vh" }}
@@ -1137,7 +1166,7 @@ function Testimonials() {
 
             <div className="flex items-center justify-center gap-4 mt-8">
               <div className="relative">
-                <img src={t.avatar} alt={t.name} className="w-14 h-14 rounded-full object-cover border-2 border-[rgba(124,92,240,0.4)]" />
+                <img src={driveUrl(t.avatar) || "https://placehold.co/100x100/08081a/7c5cf0?text=U"} onError={(e) => { e.currentTarget.src = "https://placehold.co/100x100/08081a/7c5cf0?text=U"; }} alt={t.name} className="w-14 h-14 rounded-full object-cover border-2 border-[rgba(124,92,240,0.4)]" />
                 <div className="absolute inset-0 rounded-full border border-[rgba(124,92,240,0.4)] animate-ping" style={{ animationDuration: "2.5s" }} />
               </div>
               <div className="text-left">
@@ -1201,7 +1230,7 @@ function Contact() {
             {/* Social */}
             <div className="flex gap-3 pt-2">
               {[{ icon: Github, href: data.personal.github }, { icon: Linkedin, href: data.personal.linkedin }, { icon: Instagram, href: data.personal.instagram }].map(({ icon: Icon, href }, i) => (
-                <a key={i} href={href} className="social-btn p-3 rounded-xl border border-[rgba(255,255,255,0.06)] text-[#6060a0] hover:text-white hover:border-[rgba(124,92,240,0.3)] hover:bg-[rgba(124,92,240,0.08)]">
+                <a key={i} href={href} target={href && href !== "#" ? "_blank" : undefined} rel="noopener noreferrer" className="social-btn p-3 rounded-xl border border-[rgba(255,255,255,0.06)] text-[#6060a0] hover:text-white hover:border-[rgba(124,92,240,0.3)] hover:bg-[rgba(124,92,240,0.08)]">
                   <Icon size={18} />
                 </a>
               ))}
@@ -1419,10 +1448,11 @@ function AdminPersonal() {
           <AdminField label="Phone" value={local.phone} onChange={(v) => update("phone", v)} />
           <AdminField label="Address" value={local.address} onChange={(v) => update("address", v)} />
           <div className="space-y-3">
-            <AdminField label="Photo URL" value={local.photo} onChange={(v) => update("photo", v)} />
+            <AdminField label="Photo URL (paste any link — Google Drive, Imgur, etc.)" value={local.photo} onChange={(v) => update("photo", v)} />
+            <p className="text-[#6060a0] text-[11px]" style={{ fontFamily: "'JetBrains Mono', monospace" }}>📁 Google Drive: open file → Share → Copy link → paste here</p>
             {local.photo && (
               <div className="h-24 w-24 rounded-2xl overflow-hidden border border-[rgba(124,92,240,0.15)] flex items-center justify-center bg-[rgba(0,0,0,0.3)] shadow-lg">
-                <img src={local.photo} alt="Profile preview" className="w-full h-full object-cover" />
+                <img src={driveUrl(local.photo)} alt="Profile preview" onError={(e) => { e.currentTarget.src = "https://placehold.co/100x100/08081a/7c5cf0?text=❌"; }} className="w-full h-full object-cover" />
               </div>
             )}
           </div>
@@ -1572,12 +1602,13 @@ function AdminProjects() {
                   <AdminField label="Demo URL" value={project.demo} onChange={(v) => update(project.id, "demo", v)} />
                 </div>
                 <div className="grid sm:grid-cols-4 gap-4 items-end">
-                  <div className="sm:col-span-3">
-                    <AdminField label="Cover Image URL" value={project.image} onChange={(v) => update(project.id, "image", v)} />
+                  <div className="sm:col-span-3 space-y-1">
+                    <AdminField label="Cover Image URL (Google Drive share link or direct URL)" value={project.image} onChange={(v) => update(project.id, "image", v)} />
+                    <p className="text-[#6060a0] text-[11px]" style={{ fontFamily: "'JetBrains Mono', monospace" }}>📁 Google Drive: open file → Share → Copy link → paste here</p>
                   </div>
                   {project.image && (
                      <div className="h-16 rounded-xl overflow-hidden border border-[rgba(124,92,240,0.15)] bg-[rgba(0,0,0,0.4)] flex items-center justify-center shadow-lg">
-                        <img src={project.image} alt="Project cover preview" className="max-h-full min-w-full object-cover" />
+                        <img src={driveUrl(project.image)} onError={(e) => { e.currentTarget.src = "https://placehold.co/100x100/08081a/7c5cf0?text=❌"; }} alt="Project cover preview" className="max-h-full min-w-full object-cover" />
                      </div>
                   )}
                 </div>
@@ -1691,13 +1722,12 @@ function AdminCertificates() {
               <button onClick={() => remove(cert.id)} className="flex items-center gap-2 px-3 py-2.5 text-red-400/70 hover:text-red-400 text-sm rounded-xl hover:bg-[rgba(255,0,0,0.05)] transition-all border border-transparent hover:border-[rgba(255,0,0,0.1)]"><Trash2 size={14} /> Remove</button>
             </div>
             {/* Image URL row */}
-            <div className="mt-3 grid sm:grid-cols-5 gap-3 items-end">
-              <div className="sm:col-span-4">
-                <AdminField label="Certificate Image URL (paste direct image link to show it in lightbox)" value={(cert as any).image || ""} onChange={(v) => update(cert.id, "image", v)} />
-              </div>
+            <div className="mt-3 space-y-1">
+              <AdminField label="Certificate Image URL (Google Drive share link or direct image URL)" value={(cert as any).image || ""} onChange={(v) => update(cert.id, "image", v)} />
+              <p className="text-[#6060a0] text-[11px]" style={{ fontFamily: "'JetBrains Mono', monospace" }}>📁 Google Drive: open file → Share → Copy link → paste here</p>
               {(cert as any).image && (
-                <div className="h-14 rounded-lg overflow-hidden border border-[rgba(124,92,240,0.15)] bg-[rgba(0,0,0,0.4)] flex items-center justify-center shadow-lg">
-                  <img src={(cert as any).image} alt="Certificate preview" className="max-h-full min-w-full object-cover" />
+                <div className="mt-2 h-28 rounded-lg overflow-hidden border border-[rgba(124,92,240,0.15)] bg-[rgba(0,0,0,0.4)] flex items-center justify-center shadow-lg">
+                  <img src={driveUrl((cert as any).image)} onError={(e) => { e.currentTarget.src = "https://placehold.co/300x180/08081a/7c5cf0?text=Invalid+URL"; }} alt="Certificate preview" className="max-h-full object-contain" />
                 </div>
               )}
             </div>

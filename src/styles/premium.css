@@ -736,7 +736,7 @@ textarea.premium-input { resize: none; }
 }
 
 /* ─── 37. Mobile Performance ────────────────────────────────── */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   /* Freeze expensive full-screen noise repaint */
   body::before {
     animation: none !important;
